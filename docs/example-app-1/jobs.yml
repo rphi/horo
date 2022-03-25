@@ -1,0 +1,56 @@
+# this is an example config file for a group of jobs (app) to be orchestrated by Horo.
+# a job config file can contain multiple jobs, as long as they are all valid YAML
+# jobs within the app will be able to pull resources from the 'res' folder
+
+- name: "Example job 1"
+  description: "This is one of the example jobs"
+  id: "pwsh-job-1"
+  schedule:
+    # use a predefined schedule or define one using cron syntax
+    # can apply a job to multiple schedules
+    - name: hourly
+    - type: cron
+      mask: "*/17 * * 10 *"
+      comment: "to be fair I don't know what this schedule would actually do"
+    - type: default
+      name: weekly
+      day: mon
+    - type: custom
+      name: my-custom-schedule
+  runner:
+    # tasks can be scoped to a particular runner, or group of runners
+    - "group:windows"
+    - "id:pwsh-win-runner1"
+  resources:
+    # define resources from 'res' folder, these will be synced to the working
+    # directory for the job
+    - "%horo_res%\\do-job-1.ps1"
+    - "%horo_res%\\job1-inputdata.csv"
+  command:
+    - "powershell.exe %horo_workdir%\\do-job-1.ps1 -data %horo_workdir%\\job1-inputdata.csv"
+  exitcodes:
+    # map expected exit codes to helpful messages (optional)
+    - code: 0
+      type: success
+      msg: "Job completed successfully"
+    - code: 32
+      type: warning
+      msg: "Job completed, but some targets were not accessible"
+    - code: 80
+      type: failure
+      msg: "Unable to authenticate to target systems"
+  products:
+    # any output files to be pulled back to Horo once the job has completed
+    - "%horo_workdir%\\out.log"
+  failure_action:
+    # how should Horo handle a failure of this script
+    type: retry
+    backoff: 4.5
+    max_attempts: 5
+    min_interval: 15
+  missed_action:
+    # what should Horo do if the job is missed
+    type: catchup
+    max_late: 15min # by how much can it be missed before we don't bother
+  notify:
+    # options to configure notifications to services like webhooks or syslog servers
