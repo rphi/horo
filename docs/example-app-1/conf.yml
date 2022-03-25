@@ -1,0 +1,30 @@
+# this file holds shared config bits to use in the job configs, like schedules,
+# notification configs and permissions
+
+app:
+  name: "Example app 1"
+  slug: example-app-1
+  icon: fa-i-gear
+  color: red 
+  permissions:
+    - group: admins
+      level: full
+    - group: nocteam
+      level: readonly
+
+notifiers:
+  id: teams_job_failed
+  action:
+    method: webhook
+    url: "https://teams.microsoft.com/webhook/?id=$HORO_JOB_ID&code=$HORO_EXIT_CODE"
+    verb: POST
+    body:
+      template: $HORO_RES/teams_card_template.j2 
+      engine: jinja2
+
+schedule:
+  - name: my-custom-schedule
+    type: cron
+    mask: "*/17 * * 10 *"
+    comment: "to be fair I don't know what this schedule would actually do"
+    
